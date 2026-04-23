@@ -3,100 +3,123 @@ title: Discord
 description: "将 Bot 接入 Discord 服务器"
 ---
 
-NebulaClaw 现已支持 **Discord** 作为消息渠道。和 Telegram 一致，Bot 由平台自动托管——**你不需要自己去 Developer Portal 创建 Application**。
+NebulaClaw 现已支持 **Discord** 作为消息渠道。和 Telegram 一样，Bot 由平台自动托管——**你不需要去 Discord Developer Portal 创建 Application，也不需要管理 Bot Token**。
 
 ## 前提条件
 
 - 已购买 Bot（$9.99 / Bot）并完成人设、模型配置
-- 一个 Discord 账号，并且在目标服务器拥有 **管理服务器** 或 **管理角色** 权限（否则无法添加 Bot 和分配权限）
+- 一个 Discord 账号，并且在目标服务器拥有 **管理服务器** 权限（OAuth 邀请必须由具备此权限的账号执行）
 
-## 把 Bot 加入服务器
+## 连接 Discord
 
 <Steps>
-  <Step title="获取邀请链接">
-    在控制台 Bot 概览页（Agent 详情）点击 **在 Discord 中打开**，会跳转到 Discord 官方的 OAuth2 授权页。
+  <Step title="打开 Platforms 页面">
+    进入控制台 **Agent → Platforms**，切换到 **Discord** 标签。
   </Step>
 
-  <Step title="选择目标服务器">
-    在授权页下拉列表选择要接入的服务器 → 点击 **继续** → 勾选 Bot 所需权限 → 点击 **授权**，完成人机校验即可。
+  <Step title="点击「连接 Discord」">
+    页面会展示一个紫色的 **Connect Discord** 按钮。点击后平台会自动走三步：
 
-    <Note>只有你具备 **管理服务器** 权限的服务器才会出现在列表里。</Note>
+    1. 从 Bot 池分配机器人（Allocating bot from pool）
+    2. 配置 Gateway（Configuring gateway）
+    3. 完成连接（Finalizing connection）
+
+    完成后你会看到「已连接」的卡片，带有 Bot 的 `@username`。
   </Step>
 
-  <Step title="分配审核权限">
-    Bot 加入后会默认获得一个与自身同名的角色。请在 **服务器设置 → 身份组** 里确认这个角色具有以下权限（至少勾选你要用的审核动作）：
+  <Step title="邀请 Bot 到你的服务器">
+    在「已连接」卡片右侧点击 **邀请到服务器**，会打开一个 Discord 官方 OAuth 授权页：
 
-    | 审核动作 | 必需 Discord 权限 |
-    |---------|------------------|
-    | 删除违规消息 | Manage Messages |
-    | 临时禁言（timeout） | Moderate Members |
-    | 踢出成员 | Kick Members |
-    | 封禁成员 | Ban Members |
+    - 从下拉列表选中你的服务器
+    - 确认权限（审核所需权限已预先请求）→ **授权**
+    - 通过人机验证即可
 
-    <Warning>Bot 角色在身份组列表里**必须位于被审核成员之上**，否则 Discord 会直接拒绝动作（这是 Discord 的硬性规则）。</Warning>
+    <Note>只有你拥有 **管理服务器** 权限的服务器才会出现在下拉列表里。</Note>
   </Step>
 
-  <Step title="在控制台添加服务器 / 频道">
-    进入 **Moderation → Discord Servers**，粘贴服务器 ID（Guild ID）或具体频道 ID，点击 **添加**。
+  <Step title="登记服务器 ID">
+    回到 Platforms → Discord，在下方的 **Discord 服务器** 区块点击 **添加服务器**。弹窗会引导你完成三步：
 
-    - 填 **Guild ID** → Bot 监听整个服务器所有可见频道
-    - 填 **Channel ID** → Bot 只监听这一个频道
+    1. 确认 Bot 已在该服务器（如果还没，可以在弹窗内重新打开邀请链接）
+    2. 在 Discord 里复制服务器 ID（开发者模式下右键服务器图标）
+    3. 粘贴到输入框，可选填一个服务器名称，点 **添加服务器**
+
+    添加成功后列表会显示该服务器，状态标签为 **已就绪 / 同步中 / 同步失败**。
   </Step>
 </Steps>
 
-## 获取 Guild / Channel ID
+## 获取 Server / Channel ID
 
-1. 打开 Discord → **用户设置 → 高级** → 开启 **开发者模式**
-2. 在服务器图标或频道名上右键 → **复制服务器 ID** / **复制频道 ID**
-3. 得到的是一串纯数字（如 `1091234567890123456`）
+Discord ID 是一串 17–20 位的纯数字（Snowflake），需要先开启开发者模式。
 
-<Tip>Guild ID（服务器）和 Channel ID（频道）都是 18-19 位数字，开头没有负号——这点和 Telegram 的 `-100...` 不一样。</Tip>
+<Steps>
+  <Step title="开启开发者模式">
+    Discord → **用户设置 → 高级 → 开发者模式**，打开开关。
+  </Step>
+  <Step title="复制服务器 ID">
+    在左侧服务器列表，右键点击服务器图标 → **复制服务器 ID**。
+  </Step>
+  <Step title="复制频道 ID">
+    在服务器内，右键点击具体频道名称 → **复制频道 ID**。仅当你要为某个频道单独配置时才需要。
+  </Step>
+</Steps>
 
-## 服务器设置
+<Tip>Guild ID 和 Channel ID 都是 18–19 位的数字，**开头没有负号**——和 Telegram 的 `-100...` 格式不同。</Tip>
 
-在 **Moderation → Discord Servers** 每条记录可单独配置：
+## 默认行为与频道覆盖
 
-### Require Mention（需要 @）
+登记一个服务器后，**整个服务器里 Bot 可见的所有频道**都会被默认配置接管：
 
-| 设置 | 行为 |
-|------|------|
-| **开启** | Bot 只在被 `@BotName` 提及或回复时响应 |
-| **关闭** | Bot 监听频道所有消息，满足条件主动回复 |
+- **需要 @ 才回复**（默认开启）—— 只有 `@BotName` 消息才触发 Bot
+- **Fallback Language = auto**（默认自动识别用户语种）
 
-> Discord 频道的消息量一般比 Telegram 群大得多，**强烈建议开启"需要 @"**，否则 Token 消耗会显著上升。
+> Discord 频道的消息量一般比 Telegram 群大得多，**强烈建议保留"需要 @"开启**，否则 Token 消耗会显著上升。
 
-### Fallback Language（回退语言）
+### 频道覆盖（Channel Overrides）
 
-Bot 默认自动识别用户消息的语种并用对应语言回复。**当无法识别语种时**（纯表情、图片、链接、多语言混杂），Bot 会改用这个回退语言。
+如果需要为某个频道单独调整行为（比如公告频道关闭"需要 @"、欢迎频道固定用中文回退），展开服务器行 → 点击 **添加频道**：
 
-- **跟随用户**（默认，"auto"）
-- 指定具体语言：英语、简体中文、韩语、土耳其语、印尼语、俄语、越南语
+1. 粘贴频道 ID（右键频道 → 复制频道 ID）
+2. 可选：填频道名称（仅用于列表显示）
+3. 切换 **需要 @ 才回复** 开关
+4. 选择 **Fallback Language**
 
-<Note>Bot 在线时才能修改服务器 / 频道设置。离线时设置为只读。</Note>
+> 没有配置覆盖的频道继续使用服务器默认行为。覆盖可以随时被移除，频道恢复默认。
+
+### Fallback Language 可选值
+
+**跟随用户**（默认，"auto"）/ 英语 / 简体中文 / 韩语 / 土耳其语 / 印尼语 / 俄语 / 越南语
+
+<Note>Bot 在线时才能修改服务器 / 频道设置。Agent 暂停或还未就绪时，配置区是只读的。</Note>
 
 ## 常见问题
 
 <AccordionGroup>
   <Accordion title="Bot 在服务器里完全不回复">
-    依次排查：① Bot 在服务器成员列表里且状态为在线；② Bot 角色拥有 **View Channel** 和 **Send Messages**；③ 对应频道没有在频道权限里把 Bot 的角色设为拒绝；④ 服务器或频道 ID 已在 **Moderation → Discord Servers** 添加；⑤ 如果开启了"需要 @"，直接 `@BotName` 测试。
+    依次排查：① **Agent → Platforms → Discord** 里显示「已连接」；② Bot 已通过邀请链接加入目标服务器（成员列表里能看到）；③ 服务器 ID 已在 **Discord 服务器** 列表里，状态是「已就绪」；④ 目标频道 Bot 有 View Channel + Send Messages 权限；⑤ 默认需要 `@BotName` 才触发，想不 @ 就回复需要添加频道覆盖并关闭"需要 @"。
+  </Accordion>
+  <Accordion title="「添加服务器」时提示 Bot 不在服务器里">
+    这是后端检测到该 Guild ID 对应的服务器里还没有 Bot。先在弹窗里点击 **打开邀请链接**，用 OAuth 把 Bot 加进去，再回来粘贴 Server ID。
+  </Accordion>
+  <Accordion title="服务器状态一直是「同步中」或「同步失败」">
+    同步是 Bot 后端拉取该服务器频道列表的过程，正常几秒内完成。如果长期停在 syncing 或 error：检查 Bot 是否被踢出服务器、Bot 角色是否被禁用 View Channel；必要时移除该服务器重新添加。
   </Accordion>
   <Accordion title="Bot 能说话但踢不了人 / 禁言不了">
-    两件事要确认：① Bot 角色勾选了对应的权限（Kick / Ban / Moderate Members）；② Bot 角色在身份组列表里**高于**目标成员的最高角色——Discord 规定：只能操作比自己低的角色，服务器拥有者永远无法被操作。
+    OAuth 邀请时已经请求了 Kick / Ban / Moderate Members 权限。如果不生效：① 在 **服务器设置 → 身份组** 确认 Bot 角色勾选了对应权限；② Bot 角色在身份组列表里**必须高于**目标成员的最高角色——Discord 的规则是，服务器拥有者永远无法被操作，平级或更高的角色也不行。
   </Accordion>
-  <Accordion title="Bot 回复的语言不对">
-    进入 **Moderation → Discord Servers**，把对应记录的 **Fallback Language** 改成你期望的回退语言。Bot 能识别语种时仍然用用户语言回复，只有识别不了时才走回退。
+  <Accordion title="想让公告频道不用 @ 就回复，其他频道保留 @ 要求">
+    添加频道覆盖即可：展开该服务器行 → **添加频道** → 粘贴公告频道 ID → 关闭"需要 @"开关 → 添加。只有这个频道会改变行为，其他频道继续走默认。
   </Accordion>
-  <Accordion title="可以一个 Bot 管多个服务器吗？">
-    可以。同一个 Bot 可以被邀请到多个 Discord 服务器，每个服务器 / 频道在 **Moderation → Discord Servers** 独立配置。
+  <Accordion title="可以一个 Bot 管多个 Discord 服务器吗？">
+    可以。在同一个 Agent 下，**Discord 服务器** 列表可以登记多个 Server ID。每个服务器独立管理频道覆盖。
   </Accordion>
   <Accordion title="Bot 被盗了怎么办？会不会不安全？">
     不论 Bot 是托管在 NebulaClaw 还是你自己通过 Discord Developer Portal 创建，理论上都存在 Token 泄漏的风险；托管在平台侧会走受控的密钥存储和访问审计，概率更低。
 
     **Token 泄漏后如何恢复**：
 
-    1. 打开 [Discord Developer Portal](https://discord.com/developers/applications) → 选中你的 Application → 左侧 **Bot**
-    2. 点击 **Reset Token** 并在弹窗完成二次验证（密码 + 2FA）—— 旧 Token 立即失效
-    3. 用新的 Token 重新绑定 Bot（托管 Bot 由平台自动轮换；自建 Bot 在控制台 **Bots → Edit** 里更新）
+    - **托管 Bot（NebulaClaw 分配）**：联系运营，我们会在 Developer Portal 重置 Token 并自动完成轮换
+    - **自建 Bot（如果你使用了自己的 Application）**：打开 [Discord Developer Portal](https://discord.com/developers/applications) → 选中 Application → **Bot → Reset Token** → 通过 2FA 验证，旧 Token 立即失效
 
     **安全边界**：
     - 外部人员**无法直接私信 Bot 做任何操作**——审核动作由 Bot 主动发出，攻击面只有 Token 本身

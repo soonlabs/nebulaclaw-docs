@@ -3,100 +3,123 @@ title: Discord
 description: "Connect your Bot to a Discord server"
 ---
 
-NebulaClaw now supports **Discord** as a messaging channel. Like Telegram, Bots are hosted by the platform — **you don't need to create an Application in the Developer Portal yourself**.
+NebulaClaw now supports **Discord** as a messaging channel. Like Telegram, Bots are hosted by the platform — **you don't need to create an Application in the Discord Developer Portal and you never handle a Bot Token**.
 
 ## Prerequisites
 
 - A purchased Bot ($9.99 / Bot) with persona and model configured
-- A Discord account with **Manage Server** (or **Manage Roles**) permission on the target server
+- A Discord account with **Manage Server** permission on the target server (OAuth invite must be performed by an account that has this permission)
 
-## Add the Bot to your server
+## Connect Discord
 
 <Steps>
-  <Step title="Get the invite link">
-    On the Bot overview page (Agent details), click **Open in Discord** — this takes you to Discord's OAuth2 authorization page.
+  <Step title="Open the Platforms page">
+    In the console, go to **Agent → Platforms** and switch to the **Discord** tab.
   </Step>
 
-  <Step title="Select the target server">
-    Choose the server from the dropdown → **Continue** → confirm the requested permissions → **Authorize**, then pass the CAPTCHA.
+  <Step title="Click Connect Discord">
+    You'll see a purple **Connect Discord** button. One click kicks off three phases automatically:
+
+    1. Allocating bot from pool
+    2. Configuring gateway
+    3. Finalizing connection
+
+    When it finishes, a **Connected** card appears with the Bot's `@username`.
+  </Step>
+
+  <Step title="Invite the Bot to your server">
+    On the Connected card, click **Invite to Server** — this opens Discord's official OAuth authorization page:
+
+    - Select your server from the dropdown
+    - Review the requested permissions (moderation scopes are pre-requested) → **Authorize**
+    - Pass the CAPTCHA
 
     <Note>Only servers where you have **Manage Server** permission appear in the dropdown.</Note>
   </Step>
 
-  <Step title="Grant moderation permissions">
-    Discord auto-creates a role with the Bot's name when it joins. In **Server Settings → Roles**, make sure this role has the permissions you need:
+  <Step title="Register the Server ID">
+    Back on Platforms → Discord, scroll down to the **Discord Servers** section and click **Add Server**. A three-step dialog walks you through:
 
-    | Moderation action | Required Discord permission |
-    |-------------------|------------------------------|
-    | Delete offending messages | Manage Messages |
-    | Timeout | Moderate Members |
-    | Kick | Kick Members |
-    | Ban | Ban Members |
+    1. Confirm the Bot is in the target server (if not, re-open the invite link from the dialog)
+    2. Copy the Server ID from Discord (Developer Mode → right-click the server icon)
+    3. Paste it into the input, optionally give it a friendly name, then click **Add Server**
 
-    <Warning>The Bot's role must sit **above** the roles of members you want to moderate in the role hierarchy — Discord hard-rejects actions against higher or equal roles.</Warning>
-  </Step>
-
-  <Step title="Register the server / channel in the console">
-    In **Moderation → Discord Servers**, paste the Guild ID or a specific Channel ID and click **Add**.
-
-    - **Guild ID** → Bot listens in every channel it can see
-    - **Channel ID** → Bot listens in just that one channel
+    Once added, the server appears in the list with a status tag: **Ready / Syncing / Sync error**.
   </Step>
 </Steps>
 
-## Get the Guild / Channel ID
+## Getting Server / Channel IDs
 
-1. Open Discord → **User Settings → Advanced** → enable **Developer Mode**
-2. Right-click the server icon or a channel name → **Copy Server ID** / **Copy Channel ID**
-3. You get a plain numeric string (e.g. `1091234567890123456`)
+Discord IDs are 17–20 digit numeric snowflakes. You need to turn on Developer Mode first.
 
-<Tip>Both Guild and Channel IDs are 18–19 digit integers with no leading minus — unlike Telegram's `-100...` supergroup format.</Tip>
+<Steps>
+  <Step title="Enable Developer Mode">
+    Discord → **User Settings → Advanced → Developer Mode**, toggle on.
+  </Step>
+  <Step title="Copy the Server ID">
+    In the left server sidebar, right-click the server icon → **Copy Server ID**.
+  </Step>
+  <Step title="Copy a Channel ID">
+    Inside the server, right-click a channel name → **Copy Channel ID**. Only needed if you want per-channel overrides.
+  </Step>
+</Steps>
 
-## Server settings
+<Tip>Guild and Channel IDs are 18–19 digit integers with **no leading minus** — unlike Telegram's `-100...` supergroup format.</Tip>
 
-Each entry in **Moderation → Discord Servers** can be tuned independently:
+## Default behavior and channel overrides
 
-### Require Mention
+After you register a server, the default config applies to **every channel the Bot can see** in that server:
 
-| Setting | Behavior |
-|---------|----------|
-| **On** | Bot only responds when `@BotName` is mentioned or replied-to |
-| **Off** | Bot listens to every message in the channel and replies when conditions match |
+- **Require @mention to reply** (on by default) — Bot responds only when `@BotName` is mentioned
+- **Fallback Language = auto** (language auto-detected per message)
 
-> Discord channels typically carry much higher message volume than Telegram groups. **We strongly recommend keeping Require Mention on** — otherwise token consumption will spike.
+> Discord channels typically carry much higher message volume than Telegram groups. **Keep Require Mention on** unless you know what you're doing — otherwise token usage will spike.
 
-### Fallback Language
+### Channel overrides
 
-The Bot auto-detects the user's language. **When detection fails** (emoji-only, images, bare links, mixed languages), it replies in this fallback.
+To tune behavior for a specific channel (e.g. drop the @mention requirement in #announcements, pin a fallback language in #welcome), expand the server row → click **Add channel**:
 
-- **Follow user** (default, "auto")
-- Pick a language: English, Simplified Chinese, Korean, Turkish, Indonesian, Russian, Vietnamese
+1. Paste the Channel ID (right-click channel → Copy Channel ID)
+2. Optional: channel name for display
+3. Toggle **Require @mention to reply**
+4. Pick a **Fallback Language**
 
-<Note>Per-server settings can only be modified while the Bot is online.</Note>
+> Channels without an override keep following the server default. Overrides can be removed anytime to fall back.
+
+### Fallback Language options
+
+**Follow user** (default, "auto") / English / Simplified Chinese / Korean / Turkish / Indonesian / Russian / Vietnamese
+
+<Note>Per-server and per-channel settings can only be modified while the Bot is online. The config area is read-only when the Agent is suspended or still booting.</Note>
 
 ## FAQ
 
 <AccordionGroup>
-  <Accordion title="Bot isn't replying in the server">
-    Check in order: ① Bot appears in the member list and is Online; ② Bot role has **View Channel** and **Send Messages**; ③ No channel-level override denies the Bot; ④ Server / Channel ID is registered under **Moderation → Discord Servers**; ⑤ If Require Mention is on, actually `@BotName` it.
+  <Accordion title="Bot isn't replying in my server">
+    Check in order: ① **Agent → Platforms → Discord** shows **Connected**; ② Bot is visible in the server's member list (invited via OAuth); ③ Server ID is registered in **Discord Servers** with status **Ready**; ④ Bot has View Channel + Send Messages permission in the target channel; ⑤ By default the Bot requires `@BotName` — to reply without @, add a channel override with Require @mention off.
   </Accordion>
-  <Accordion title="Bot can talk but can't kick / timeout">
-    Two things: ① Bot role must have the permission (Kick / Ban / Moderate Members) enabled; ② Bot role must sit **above** the target member's highest role in the role list — Discord forbids acting on equal-or-higher roles, and the server owner can never be moderated.
+  <Accordion title="Add Server says the Bot isn't in the server">
+    The backend detected that the Bot hasn't joined that Guild yet. In the dialog, click **Open invite link** and re-authorize through Discord's OAuth, then paste the Server ID again.
   </Accordion>
-  <Accordion title="Bot replies in the wrong language">
-    In **Moderation → Discord Servers**, change **Fallback Language** for that entry. The Bot still replies in the user's detected language when possible — fallback only kicks in when detection fails.
+  <Accordion title="Server status stuck on Syncing or Sync error">
+    Sync is when the Bot backend pulls the channel list for the server. It's usually done within seconds. If it hangs: check that the Bot wasn't kicked, and its role hasn't been denied View Channel. When in doubt, remove and re-add the server.
   </Accordion>
-  <Accordion title="Can one Bot manage multiple servers?">
-    Yes. Invite the same Bot to multiple Discord servers; each server / channel is configured independently in **Moderation → Discord Servers**.
+  <Accordion title="Bot can talk but can't kick / timeout members">
+    Moderation permissions (Kick / Ban / Moderate Members) are requested during the OAuth invite. If actions still fail: ① in **Server Settings → Roles**, verify the Bot's role has the permission enabled; ② the Bot's role must sit **above** the target member's highest role — Discord forbids acting on equal-or-higher roles, and the server owner can never be moderated.
+  </Accordion>
+  <Accordion title="I want one channel to reply without @, the rest to keep requiring @">
+    Add a channel override: expand the server row → **Add channel** → paste that channel's ID → turn off Require @mention → Add. Only that channel changes; the rest follow the server default.
+  </Accordion>
+  <Accordion title="Can one Bot manage multiple Discord servers?">
+    Yes. Under the same Agent, the **Discord Servers** list can hold multiple Server IDs. Each server manages its own channel overrides.
   </Accordion>
   <Accordion title="What if my Bot gets compromised? Is it safe?">
     Whether the Bot is hosted on NebulaClaw or created by you via the Discord Developer Portal, token leakage is theoretically possible. Platform-hosted Bots use controlled key storage and access auditing, so the probability is lower.
 
     **Recovering a leaked token**:
 
-    1. Open the [Discord Developer Portal](https://discord.com/developers/applications) → select your Application → **Bot** in the sidebar
-    2. Click **Reset Token** and pass the 2FA challenge — the old token is invalidated immediately
-    3. Re-bind with the new token (platform-hosted Bots rotate automatically; for your own Bots, update in **Bots → Edit**)
+    - **Platform-hosted Bot (allocated by NebulaClaw)**: contact support — we reset the token in the Developer Portal and rotate it automatically
+    - **Self-hosted Bot (if you're using your own Application)**: open the [Discord Developer Portal](https://discord.com/developers/applications) → select your Application → **Bot → Reset Token** → confirm 2FA; the old token is invalidated immediately
 
     **Security boundary**:
     - Outsiders **cannot DM the Bot to do anything** — moderation actions are Bot-initiated; the only attack surface is the token itself
