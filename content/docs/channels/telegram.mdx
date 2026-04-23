@@ -88,4 +88,18 @@ The Bot auto-detects the user's language and replies in kind. **When it can't de
   <Accordion title="Can one Bot manage multiple groups?">
     Yes. Add the same Bot to multiple groups; each group is configured independently in **Moderation → Telegram Groups**.
   </Accordion>
+  <Accordion title="What if my Bot gets compromised? Is it safe?">
+    Whether the Bot is hosted on NebulaClaw or created by you via BotFather, token leakage is theoretically possible. Platform-hosted Bots use controlled key storage and access auditing, so the probability is lower.
+
+    **Recovering a leaked token**:
+
+    1. Open Telegram → [@BotFather](https://t.me/BotFather) → `/mybots`, select the Bot
+    2. Go to **API Token → Revoke current token** — the old token becomes invalid immediately
+    3. Re-bind the Bot with the new token (platform-hosted Bots rotate automatically; for your own Bots, update it in **Bots → Edit**)
+
+    **Security boundary**:
+    - Outsiders **cannot DM the Bot to do anything** — moderation actions are Bot-initiated; the only attack surface is the token itself
+    - As long as your Telegram account (the one that owns BotFather) has 2FA enabled and isn't compromised, you can reset the Bot anytime
+    - As long as the Bot token isn't leaked, the Bot is safe
+  </Accordion>
 </AccordionGroup>

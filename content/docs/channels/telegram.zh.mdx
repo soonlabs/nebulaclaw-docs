@@ -88,4 +88,18 @@ Bot 默认自动识别用户消息的语种并用对应语言回复。**当无�
   <Accordion title="可以一个 Bot 管多个群吗？">
     可以。同一个 Bot 可以被加入多个群组，每个群在 **Moderation → Telegram Groups** 独立配置。
   </Accordion>
+  <Accordion title="Bot 被盗了怎么办？会不会不安全？">
+    不论 Bot 是托管在 NebulaClaw 还是你自己通过 BotFather 创建，理论上都存在 Token 泄漏的风险；托管在平台侧会走受控的密钥存储和访问审计，概率更低。
+
+    **Token 泄漏后如何恢复**：
+
+    1. 打开 Telegram → [@BotFather](https://t.me/BotFather) → `/mybots` 选中目标 Bot
+    2. 进入 **API Token → Revoke current token**，旧 Token 立即失效
+    3. 用新的 Token 重新绑定 Bot（托管 Bot 由平台自动轮换；自建 Bot 在控制台 **Bots → Edit** 里更新）
+
+    **安全边界**：
+    - 外部人员**无法直接私信 Bot 做任何操作**——群组审核动作由 Bot 主动发出，攻击面只有 Token 本身
+    - 只要你的 Telegram 账号（即能登录 BotFather 的那个账号）开启了两步验证且没被盗，Bot 随时可以 reset
+    - 只要 Bot Token 没泄漏，就是安全的
+  </Accordion>
 </AccordionGroup>

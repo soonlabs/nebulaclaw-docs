@@ -1,10 +1,106 @@
 ---
 title: Discord
-description: "Planned"
+description: "Connect your Bot to a Discord server"
 ---
 
-<Info>Discord integration is **planned**. Feature details and timeline will be announced on this page and official channels once confirmed.</Info>
+NebulaClaw now supports **Discord** as a messaging channel. Like Telegram, Bots are hosted by the platform — **you don't need to create an Application in the Developer Portal yourself**.
 
-<Card title="Telegram Community" icon="paper-plane" href="https://t.me/nebulaclaw">
-  Join for announcements and early access
-</Card>
+## Prerequisites
+
+- A purchased Bot ($9.99 / Bot) with persona and model configured
+- A Discord account with **Manage Server** (or **Manage Roles**) permission on the target server
+
+## Add the Bot to your server
+
+<Steps>
+  <Step title="Get the invite link">
+    On the Bot overview page (Agent details), click **Open in Discord** — this takes you to Discord's OAuth2 authorization page.
+  </Step>
+
+  <Step title="Select the target server">
+    Choose the server from the dropdown → **Continue** → confirm the requested permissions → **Authorize**, then pass the CAPTCHA.
+
+    <Note>Only servers where you have **Manage Server** permission appear in the dropdown.</Note>
+  </Step>
+
+  <Step title="Grant moderation permissions">
+    Discord auto-creates a role with the Bot's name when it joins. In **Server Settings → Roles**, make sure this role has the permissions you need:
+
+    | Moderation action | Required Discord permission |
+    |-------------------|------------------------------|
+    | Delete offending messages | Manage Messages |
+    | Timeout | Moderate Members |
+    | Kick | Kick Members |
+    | Ban | Ban Members |
+
+    <Warning>The Bot's role must sit **above** the roles of members you want to moderate in the role hierarchy — Discord hard-rejects actions against higher or equal roles.</Warning>
+  </Step>
+
+  <Step title="Register the server / channel in the console">
+    In **Moderation → Discord Servers**, paste the Guild ID or a specific Channel ID and click **Add**.
+
+    - **Guild ID** → Bot listens in every channel it can see
+    - **Channel ID** → Bot listens in just that one channel
+  </Step>
+</Steps>
+
+## Get the Guild / Channel ID
+
+1. Open Discord → **User Settings → Advanced** → enable **Developer Mode**
+2. Right-click the server icon or a channel name → **Copy Server ID** / **Copy Channel ID**
+3. You get a plain numeric string (e.g. `1091234567890123456`)
+
+<Tip>Both Guild and Channel IDs are 18–19 digit integers with no leading minus — unlike Telegram's `-100...` supergroup format.</Tip>
+
+## Server settings
+
+Each entry in **Moderation → Discord Servers** can be tuned independently:
+
+### Require Mention
+
+| Setting | Behavior |
+|---------|----------|
+| **On** | Bot only responds when `@BotName` is mentioned or replied-to |
+| **Off** | Bot listens to every message in the channel and replies when conditions match |
+
+> Discord channels typically carry much higher message volume than Telegram groups. **We strongly recommend keeping Require Mention on** — otherwise token consumption will spike.
+
+### Fallback Language
+
+The Bot auto-detects the user's language. **When detection fails** (emoji-only, images, bare links, mixed languages), it replies in this fallback.
+
+- **Follow user** (default, "auto")
+- Pick a language: English, Simplified Chinese, Korean, Turkish, Indonesian, Russian, Vietnamese
+
+<Note>Per-server settings can only be modified while the Bot is online.</Note>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Bot isn't replying in the server">
+    Check in order: ① Bot appears in the member list and is Online; ② Bot role has **View Channel** and **Send Messages**; ③ No channel-level override denies the Bot; ④ Server / Channel ID is registered under **Moderation → Discord Servers**; ⑤ If Require Mention is on, actually `@BotName` it.
+  </Accordion>
+  <Accordion title="Bot can talk but can't kick / timeout">
+    Two things: ① Bot role must have the permission (Kick / Ban / Moderate Members) enabled; ② Bot role must sit **above** the target member's highest role in the role list — Discord forbids acting on equal-or-higher roles, and the server owner can never be moderated.
+  </Accordion>
+  <Accordion title="Bot replies in the wrong language">
+    In **Moderation → Discord Servers**, change **Fallback Language** for that entry. The Bot still replies in the user's detected language when possible — fallback only kicks in when detection fails.
+  </Accordion>
+  <Accordion title="Can one Bot manage multiple servers?">
+    Yes. Invite the same Bot to multiple Discord servers; each server / channel is configured independently in **Moderation → Discord Servers**.
+  </Accordion>
+  <Accordion title="What if my Bot gets compromised? Is it safe?">
+    Whether the Bot is hosted on NebulaClaw or created by you via the Discord Developer Portal, token leakage is theoretically possible. Platform-hosted Bots use controlled key storage and access auditing, so the probability is lower.
+
+    **Recovering a leaked token**:
+
+    1. Open the [Discord Developer Portal](https://discord.com/developers/applications) → select your Application → **Bot** in the sidebar
+    2. Click **Reset Token** and pass the 2FA challenge — the old token is invalidated immediately
+    3. Re-bind with the new token (platform-hosted Bots rotate automatically; for your own Bots, update in **Bots → Edit**)
+
+    **Security boundary**:
+    - Outsiders **cannot DM the Bot to do anything** — moderation actions are Bot-initiated; the only attack surface is the token itself
+    - Signing into the Developer Portal requires your Discord password + 2FA, so as long as your Discord account isn't compromised, you can reset the Bot anytime
+    - As long as the Bot token isn't leaked, the Bot is safe
+  </Accordion>
+</AccordionGroup>

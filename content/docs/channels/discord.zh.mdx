@@ -1,10 +1,106 @@
 ---
 title: Discord
-description: "计划上线"
+description: "将 Bot 接入 Discord 服务器"
 ---
 
-<Info>Discord 集成**计划上线**，具体时间和功能细节确定后会在此页面和官方频道同步公告。</Info>
+NebulaClaw 现已支持 **Discord** 作为消息渠道。和 Telegram 一致，Bot 由平台自动托管——**你不需要自己去 Developer Portal 创建 Application**。
 
-<Card title="Telegram 社区" icon="paper-plane" href="https://t.me/nebulaclaw">
-  加入社区获取最新消息
-</Card>
+## 前提条件
+
+- 已购买 Bot（$9.99 / Bot）并完成人设、模型配置
+- 一个 Discord 账号，并且在目标服务器拥有 **管理服务器** 或 **管理角色** 权限（否则无法添加 Bot 和分配权限）
+
+## 把 Bot 加入服务器
+
+<Steps>
+  <Step title="获取邀请链接">
+    在控制台 Bot 概览页（Agent 详情）点击 **在 Discord 中打开**，会跳转到 Discord 官方的 OAuth2 授权页。
+  </Step>
+
+  <Step title="选择目标服务器">
+    在授权页下拉列表选择要接入的服务器 → 点击 **继续** → 勾选 Bot 所需权限 → 点击 **授权**，完成人机校验即可。
+
+    <Note>只有你具备 **管理服务器** 权限的服务器才会出现在列表里。</Note>
+  </Step>
+
+  <Step title="分配审核权限">
+    Bot 加入后会默认获得一个与自身同名的角色。请在 **服务器设置 → 身份组** 里确认这个角色具有以下权限（至少勾选你要用的审核动作）：
+
+    | 审核动作 | 必需 Discord 权限 |
+    |---------|------------------|
+    | 删除违规消息 | Manage Messages |
+    | 临时禁言（timeout） | Moderate Members |
+    | 踢出成员 | Kick Members |
+    | 封禁成员 | Ban Members |
+
+    <Warning>Bot 角色在身份组列表里**必须位于被审核成员之上**，否则 Discord 会直接拒绝动作（这是 Discord 的硬性规则）。</Warning>
+  </Step>
+
+  <Step title="在控制台添加服务器 / 频道">
+    进入 **Moderation → Discord Servers**，粘贴服务器 ID（Guild ID）或具体频道 ID，点击 **添加**。
+
+    - 填 **Guild ID** → Bot 监听整个服务器所有可见频道
+    - 填 **Channel ID** → Bot 只监听这一个频道
+  </Step>
+</Steps>
+
+## 获取 Guild / Channel ID
+
+1. 打开 Discord → **用户设置 → 高级** → 开启 **开发者模式**
+2. 在服务器图标或频道名上右键 → **复制服务器 ID** / **复制频道 ID**
+3. 得到的是一串纯数字（如 `1091234567890123456`）
+
+<Tip>Guild ID（服务器）和 Channel ID（频道）都是 18-19 位数字，开头没有负号——这点和 Telegram 的 `-100...` 不一样。</Tip>
+
+## 服务器设置
+
+在 **Moderation → Discord Servers** 每条记录可单独配置：
+
+### Require Mention（需要 @）
+
+| 设置 | 行为 |
+|------|------|
+| **开启** | Bot 只在被 `@BotName` 提及或回复时响应 |
+| **关闭** | Bot 监听频道所有消息，满足条件主动回复 |
+
+> Discord 频道的消息量一般比 Telegram 群大得多，**强烈建议开启"需要 @"**，否则 Token 消耗会显著上升。
+
+### Fallback Language（回退语言）
+
+Bot 默认自动识别用户消息的语种并用对应语言回复。**当无法识别语种时**（纯表情、图片、链接、多语言混杂），Bot 会改用这个回退语言。
+
+- **跟随用户**（默认，"auto"）
+- 指定具体语言：英语、简体中文、韩语、土耳其语、印尼语、俄语、越南语
+
+<Note>Bot 在线时才能修改服务器 / 频道设置。离线时设置为只读。</Note>
+
+## 常见问题
+
+<AccordionGroup>
+  <Accordion title="Bot 在服务器里完全不回复">
+    依次排查：① Bot 在服务器成员列表里且状态为在线；② Bot 角色拥有 **View Channel** 和 **Send Messages**；③ 对应频道没有在频道权限里把 Bot 的角色设为拒绝；④ 服务器或频道 ID 已在 **Moderation → Discord Servers** 添加；⑤ 如果开启了"需要 @"，直接 `@BotName` 测试。
+  </Accordion>
+  <Accordion title="Bot 能说话但踢不了人 / 禁言不了">
+    两件事要确认：① Bot 角色勾选了对应的权限（Kick / Ban / Moderate Members）；② Bot 角色在身份组列表里**高于**目标成员的最高角色——Discord 规定：只能操作比自己低的角色，服务器拥有者永远无法被操作。
+  </Accordion>
+  <Accordion title="Bot 回复的语言不对">
+    进入 **Moderation → Discord Servers**，把对应记录的 **Fallback Language** 改成你期望的回退语言。Bot 能识别语种时仍然用用户语言回复，只有识别不了时才走回退。
+  </Accordion>
+  <Accordion title="可以一个 Bot 管多个服务器吗？">
+    可以。同一个 Bot 可以被邀请到多个 Discord 服务器，每个服务器 / 频道在 **Moderation → Discord Servers** 独立配置。
+  </Accordion>
+  <Accordion title="Bot 被盗了怎么办？会不会不安全？">
+    不论 Bot 是托管在 NebulaClaw 还是你自己通过 Discord Developer Portal 创建，理论上都存在 Token 泄漏的风险；托管在平台侧会走受控的密钥存储和访问审计，概率更低。
+
+    **Token 泄漏后如何恢复**：
+
+    1. 打开 [Discord Developer Portal](https://discord.com/developers/applications) → 选中你的 Application → 左侧 **Bot**
+    2. 点击 **Reset Token** 并在弹窗完成二次验证（密码 + 2FA）—— 旧 Token 立即失效
+    3. 用新的 Token 重新绑定 Bot（托管 Bot 由平台自动轮换；自建 Bot 在控制台 **Bots → Edit** 里更新）
+
+    **安全边界**：
+    - 外部人员**无法直接私信 Bot 做任何操作**——审核动作由 Bot 主动发出，攻击面只有 Token 本身
+    - 登录 Discord Developer Portal 需要账号密码 + 两步验证，只要你的 Discord 账号没被盗，Bot 随时可以 reset
+    - 只要 Bot Token 没泄漏，就是安全的
+  </Accordion>
+</AccordionGroup>
